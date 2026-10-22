@@ -4,7 +4,7 @@
    ส่วนที่ 2: ENGINE (ไม่ต้องแก้)
    ========================================================= */
 
-/* ---------- วิชา + หัวข้อ (เพิ่มวิชาใหม่: คัดลอก { ... } แล้ววางต่อท้าย) ---------- */
+/* ---------- เตรียมทหาร ---------- */
 const SUBJECTS = [
   { id:'math1', name:'คณิตศาสตร์ ม.ต้น', code:'MATH · M.1–3', color:'#f5c84c', groups:[
     { title:'จำนวนและพีชคณิต', topics:[
@@ -49,7 +49,53 @@ const SUBJECTS = [
   ]},
 ];
 
-/* ---------- วิชาประจำวัน (0=อาทิตย์ ... 6=เสาร์) · n = จำนวนหัวข้อต่อวัน ---------- */
+/* ---------- NETSAT (มข.) ---------- */
+const NETSAT = [
+  { id:'ns-math', name:'ความฉลาดรู้ทั่วไปด้านคณิตศาสตร์', code:'NETSAT · MATH', color:'#5ce1e6', groups:[
+    { title:'Functions', topics:['กราฟ','ฟังก์ชัน']},
+    { title:'Numbers and Mathematical Expressions', topics:['สมการ','เลขยกกำลัง','สมการพหุนาม','ค่าคงที่','การวาดกราฟ']},
+    { title:'Geometrical Figures', topics:['เรขาคณิต','การหาพื้นที่','ตรีโกณมิติ','ปริมาตรของรูปทรงต่าง ๆ','จำนวนเชิงซ้อน']},
+    { title:'Data Handling', topics:['อัตราส่วน เปอร์เซ็นต์','ความน่าจะเป็น','สถิติพื้นฐาน','การวิเคราะห์ข้อมูล']},
+  ]},
+  { id:'ns-phy', name:'ความฉลาดรู้เฉพาะด้านฟิสิกส์', code:'NETSAT · PHYSICS', color:'#f7a541', groups:[
+    { title:'เนื้อหา', topics:['กลศาสตร์','แม่เหล็กไฟฟ้า','คลื่นและแสง','ความร้อนและอุณหพลศาสตร์','ฟิสิกส์ยุคใหม่']},
+    { title:'อื่น ๆ', topics:['เรื่องทั่วไป','ทักษะการวิเคราะห์เชิงกราฟ การวัดผล และทักษะทางคณิตศาสตร์','เรื่องใหม่ทางฟิสิกส์ที่กำลังค้นคว้าและพัฒนาในปัจจุบัน']},
+    { title:'การประยุกต์ใช้ทักษะปฏิบัติการ', topics:['เลขนัยสำคัญ','วิเคราะห์หน่วยของปริมาณต่าง ๆ ทางฟิสิกส์','การวิเคราะห์กราฟ','คำอุปสรรค']},
+    { title:'คณิตศาสตร์ในการแก้ปัญหาฟิสิกส์', topics:['พีชคณิต','ตรีโกณมิติ','กราฟความสัมพันธ์','อัตราส่วนและสัดส่วน']},
+    { title:'ระดับโจทย์ที่ต้องฝึก', topics:[
+      'ความรู้พื้นฐาน — รู้ จำ และเข้าใจเนื้อหาหรือข้อมูล',
+      'ปัญหาไม่ซับซ้อน — ใช้ความสัมพันธ์หรือเนื้อหาเรื่องเดียว',
+      'ปัญหาซับซ้อน — บูรณาการตั้งแต่ 2 เรื่องขึ้นไป']},
+  ]},
+  { id:'ns-chem', name:'ความฉลาดรู้เฉพาะด้านเคมี', code:'NETSAT · CHEMISTRY', color:'#c58af0', groups:[
+    { title:'สสาร (Matter)', topics:['สถานะของสาร','สารละลาย','การเปลี่ยนแปลงทางเคมี','ปริมาณสารสัมพันธ์']},
+    { title:'อันตรกิริยา (Interactions)', topics:['โครงสร้างอะตอมและตารางธาตุ','พันธะระหว่างโมเลกุล','แก๊สและสมบัติของแก๊ส','สารประกอบอินทรีย์และพอลิเมอร์']},
+    { title:'พลังงาน (Energy)', topics:['ปฏิกิริยาเคมีและการเปลี่ยนแปลงพลังงาน','สมดุลเคมี','อัตราการเกิดปฏิกิริยาเคมี','กรด-เบส','ไฟฟ้าเคมี']},
+  ], competency:['การทำนายผลการทดลอง','การใช้ประจักษ์พยานทางวิทยาศาสตร์','การแปลความหมายข้อมูลจากตารางหรือกราฟ',
+    'การอธิบายและการให้เหตุผลทางวิทยาศาสตร์','การลงข้อสรุป','การสร้างแบบจำลอง','การแก้ปัญหา','การประยุกต์ใช้ความรู้']},
+  { id:'ns-sci', name:'ความฉลาดรู้เฉพาะด้านวิทยาศาสตร์และเทคโนโลยี', code:'NETSAT · SCI & TECH', color:'#7cc0ff', groups:[
+    { title:'ขอบเขตเนื้อหา', topics:['เทคโนโลยี','วิทยาศาสตร์กายภาพ','วิทยาศาสตร์ โลก และอวกาศ','วิทยาศาสตร์ชีวภาพ']},
+    { title:'ทักษะดิจิทัล', topics:['วิทยาการคอมพิวเตอร์','เทคโนโลยีสารสนเทศ','การรู้ดิจิทัล']},
+  ], competency:['การทำนายผลการทดลอง','การใช้ประจักษ์พยานทางวิทยาศาสตร์','การวิเคราะห์และแปลความหมายข้อมูลจากกราฟหรือตาราง',
+    'การอธิบายและการให้เหตุผลทางวิทยาศาสตร์','การลงข้อสรุป','การแก้ปัญหา','การประยุกต์ใช้ความรู้และทักษะปฏิบัติการ']},
+];
+
+/* ---------- จ่าอากาศ ---------- */
+const NCO = [
+  { id:'nco-math', name:'คณิตศาสตร์', code:'จ่าอากาศ · MATH', color:'#4fb3ff', groups:[
+    { title:'', topics:['จำนวนจริง','เซต','ตรรกศาสตร์','สมการ','ความสัมพันธ์และฟังก์ชัน',
+      'เรขาคณิตวิเคราะห์','ลำดับและอนุกรม','ความน่าจะเป็น','สถิติ']}
+  ]},
+];
+
+/* ---------- สนามสอบทั้งหมด ---------- */
+const TRACKS = {
+  cadet:  { name:'เตรียมทหาร', subjects:SUBJECTS, list:'#subjects' },
+  netsat: { name:'NETSAT',     subjects:NETSAT,   list:'#subjects-netsat' },
+  nco:    { name:'จ่าอากาศ',   subjects:NCO,      list:'#subjects-nco' },
+};
+
+/* ---------- วิชาประจำวัน (เตรียมทหาร) 0=อาทิตย์ ... 6=เสาร์ · n = จำนวนหัวข้อต่อวัน ---------- */
 const STUDY_PLAN = {
   1:{ subjects:[{id:'math1',n:2},{id:'eng',n:1}],    extra:['ทำโจทย์ 10 ข้อจากเรื่องที่อ่าน','ท่องศัพท์อังกฤษ 20 คำ'] },
   2:{ subjects:[{id:'phy',n:2},{id:'thai',n:1}],     extra:['ทำโจทย์ 10 ข้อจากเรื่องที่อ่าน'] },
@@ -126,8 +172,17 @@ const DOW_S = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const WEEK_ORDER = [1,2,3,4,5,6,0];
 const KEY = 'cadetPrep.v1';
 
-let state = JSON.parse(localStorage.getItem(KEY) || 'null') || {examDate:'', topics:{}, days:{}};
-let readFilter = 'all';
+const ALL_SUBJECTS = [];
+Object.entries(TRACKS).forEach(([t, cfg]) => cfg.subjects.forEach(s => { s.track = t; ALL_SUBJECTS.push(s); }));
+
+let state = JSON.parse(localStorage.getItem(KEY) || 'null') || {};
+state.examDate  = state.examDate  || '';
+state.examDates = state.examDates || {};
+state.include   = state.include   || {};
+state.topics    = state.topics    || {};
+state.days      = state.days      || {};
+
+const readFilter = {cadet:'all', netsat:'all', nco:'all'};
 let selDow = new Date().getDay();
 
 /* ---------- Helpers ---------- */
@@ -136,21 +191,38 @@ const pad = n => String(n).padStart(2, '0');
 const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $ = s => document.querySelector(s);
-const $ = s => document.querySelectorAll(s);
+const $ = s => Array.from(document.querySelectorAll(s));
 const CHK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c110d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
 
 const tkey = (sid, t) => sid + '::' + t;
 const tname = k => k.split('::')[1];
-const subjOf = k => SUBJECTS.find(s => s.id === k.split('::')[0]);
+const subjById = id => ALL_SUBJECTS.find(s => s.id === id);
+const subjOf = k => subjById(k.split('::')[0]);
 const allTopics = s => s.groups.flatMap(g => g.topics.map(t => tkey(s.id, t)));
 const planSubs = dow => STUDY_PLAN[dow]?.subjects || [];
 const todayDay = () => getDay(dkey(new Date()), new Date().getDay());
 
-/* ---------- Data logic ---------- */
+/* ---------- วันสอบ ---------- */
+const getExam = t => t === 'cadet' ? state.examDate : (state.examDates[t] || '');
+function setExam(t, v) {
+  if (t === 'cadet') state.examDate = v; else state.examDates[t] = v;
+  save(); updateCd(); renderToday();
+}
+function daysLeft(t = 'cadet') {
+  const v = getExam(t);
+  if (!v) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.max(0, Math.round((new Date(v + 'T00:00:00') - now) / 86400000));
+}
+function updateCd() {
+  $('[data-cd]').forEach(el => { const l = daysLeft(el.dataset.cd); el.textContent = l === null ? '--' : l; });
+}
+
+/* ---------- เลือกหัวข้อ ---------- */
 function pickTopics(dow, exclude = [], perSubject) {
   const out = [];
   planSubs(dow).forEach(p => {
-    const s = SUBJECTS.find(x => x.id === p.id);
+    const s = subjById(p.id);
     if (!s) return;
     allTopics(s)
       .filter(k => !state.topics[k] && !exclude.includes(k))
@@ -160,12 +232,45 @@ function pickTopics(dow, exclude = [], perSubject) {
   return out;
 }
 
+/* หมุนวิชาในสนามนั้นทีละวัน แล้วเลือกเรื่องถัดไปที่ยังไม่อ่าน */
+function pickTrackTopic(t, exclude = []) {
+  const subs = TRACKS[t]?.subjects || [];
+  if (!subs.length) return null;
+  const start = Math.floor(Date.now() / 86400000) % subs.length;
+  for (let i = 0; i < subs.length; i++) {
+    const s = subs[(start + i) % subs.length];
+    const k = allTopics(s).find(k => !state.topics[k] && !exclude.includes(k));
+    if (k) return k;
+  }
+  return null;
+}
+
 function getDay(key, dow) {
   if (!state.days[key]) {
-    state.days[key] = {done:{}, topics:pickTopics(dow), custom:[], pct:0};
+    const topics = pickTopics(dow);
+    Object.keys(state.include).forEach(t => {
+      if (!state.include[t]) return;
+      const k = pickTrackTopic(t, topics);
+      if (k) topics.push(k);
+    });
+    state.days[key] = {done:{}, topics, custom:[], pct:0};
     save();
   }
   return state.days[key];
+}
+
+function toggleInclude(t, on) {
+  state.include[t] = on;
+  const day = todayDay();
+  if (on) {
+    if (!day.topics.some(k => subjOf(k)?.track === t)) {
+      const k = pickTrackTopic(t, day.topics);
+      if (k) day.topics.push(k);
+    }
+  } else {
+    day.topics = day.topics.filter(k => subjOf(k)?.track !== t || state.topics[k]);
+  }
+  save(); renderAll();
 }
 
 function buildSections(day, dow) {
@@ -184,9 +289,9 @@ function buildSections(day, dow) {
   w.home.forEach(id => train.push({id:'h-'+id, text:EX[id].name+' — '+EX[id].th, sub:EX[id].sets, tag:'บ้าน'}));
 
   const sections = [
-    {key:'study',   title:'อ่านหนังสือ · Study',      items:study},
-    {key:'train',   title:'ออกกำลังกาย · '+w.title,  items:train},
-    {key:'routine', title:'กิจวัตร · Routine',         items:ROUTINE.map(r => ({id:'r-'+r.id, text:r.text}))},
+    {key:'study',   title:'อ่านหนังสือ · Study',     items:study},
+    {key:'train',   title:'ออกกำลังกาย · '+w.title, items:train},
+    {key:'routine', title:'กิจวัตร · Routine',        items:ROUTINE.map(r => ({id:'r-'+r.id, text:r.text}))},
   ];
   if (day.custom.length) {
     sections.push({key:'custom', title:'งานเพิ่มเติม',
@@ -196,13 +301,6 @@ function buildSections(day, dow) {
 }
 
 const isDone = (it, day) => it.topic ? !!state.topics[it.topic] : !!day.done[it.id];
-
-function daysLeft() {
-  if (!state.examDate) return null;
-  const t = new Date(); t.setHours(0,0,0,0);
-  const e = new Date(state.examDate + 'T00:00:00');
-  return Math.max(0, Math.round((e - t) / 86400000));
-}
 
 /* ---------- Templates ---------- */
 function checkHTML(it, done) {
@@ -226,13 +324,37 @@ function exCard(id) {
   </div>`;
 }
 
+function subjectCard(s, f) {
+  const ks = allTopics(s);
+  const d = ks.filter(k => state.topics[k]).length;
+  const sp = ks.length ? Math.round(d / ks.length * 100) : 0;
+  let body = '';
+  s.groups.forEach(g => {
+    const items = g.topics.map(t => tkey(s.id, t)).filter(k =>
+      f === 'all' || (f === 'done' ? state.topics[k] : !state.topics[k]));
+    if (!items.length) return;
+    if (g.title) body += `<div class="sec">${esc(g.title)}</div>`;
+    body += items.map(k => checkHTML({id:'t:'+k, text:tname(k), topic:k}, !!state.topics[k])).join('');
+  });
+  if (!body) body = `<div class="empty">${f === 'todo' ? 'อ่านครบแล้ว เยี่ยมมาก!' : 'ยังไม่มีหัวข้อที่อ่านแล้ว'}</div>`;
+  const comp = s.competency ? `<div class="comp"><div class="comp-h">Competency · ทักษะที่ใช้ในข้อสอบ</div>
+      <div class="comp-list">${s.competency.map(c => `<span>${esc(c)}</span>`).join('')}</div></div>` : '';
+  return `<div class="subj glass" style="--c:${s.color}">
+    <div class="subj-h">
+      <div class="code">${esc(s.code)}</div>
+      <div class="row"><h3>${esc(s.name)}</h3><span class="n">${d}/${ks.length}</span></div>
+      <div class="pbar"><i style="width:${sp}%"></i></div>
+    </div>
+    <div class="subj-b">${body}${comp}</div>
+  </div>`;
+}
+
 /* ---------- Render: TODAY ---------- */
 function renderToday() {
   const now = new Date(), key = dkey(now), dow = now.getDay();
   const day = getDay(key, dow);
   const sections = buildSections(day, dow);
 
-  // checklist
   let total = 0, done = 0, html = '';
   sections.forEach(sec => {
     const d = sec.items.filter(i => isDone(i, day)).length;
@@ -253,7 +375,6 @@ function renderToday() {
   $('#dayPill').textContent = `${done}/${total} · ${pct}%`;
   $('#todayText').textContent = `วัน${DOW[dow]}ที่ ${now.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}`;
 
-  // stats
   const all = SUBJECTS.flatMap(allTopics);
   const readDone = all.filter(k => state.topics[k]).length;
   const readPct = all.length ? Math.round(readDone / all.length * 100) : 0;
@@ -263,18 +384,17 @@ function renderToday() {
   if (pct < 80) d.setDate(d.getDate() - 1);
   while (state.days[dkey(d)]?.pct >= 80) { streak++; d.setDate(d.getDate() - 1); }
 
-  const left = daysLeft();
+  const left = daysLeft('cadet');
   $('#stats').innerHTML = [
-    ['Today · วันนี้',      pct + '%',     `${done} จาก ${total} งาน`,      pct, 'var(--accent)'],
-    ['Reading · อ่านแล้ว',  readPct + '%', `${readDone}/${all.length} หัวข้อ`, readPct, 'var(--ok)'],
-    ['Streak · ต่อเนื่อง',  streak + ' วัน', 'วันที่ทำครบ ≥80%',           Math.min(streak * 10, 100), 'var(--orange)'],
-    ['Exam · วันสอบ', left === null ? '--' : left + ' วัน', left === null ? 'ตั้งวันสอบด้านบน' : 'เหลือก่อนวันสอบ', null, ''],
+    ['Today · วันนี้',          pct + '%',      `${done} จาก ${total} งาน`,        pct, 'var(--accent)'],
+    ['Cadet · อ่านแล้ว',        readPct + '%',  `${readDone}/${all.length} หัวข้อ`, readPct, 'var(--ok)'],
+    ['Streak · ต่อเนื่อง',      streak + ' วัน', 'วันที่ทำครบ ≥80%',               Math.min(streak * 10, 100), 'var(--orange)'],
+    ['Exam · วันสอบ', left === null ? '--' : left + ' วัน', left === null ? 'ตั้งวันสอบด้านบน' : 'เหลือก่อนสอบเตรียมทหาร', null, ''],
   ].map(([k, v, s, p, c]) => `<div class="stat glass">
       <div class="lbl">${k}</div><div class="v">${v}</div><div class="s">${s}</div>
       ${p !== null ? `<div class="pbar"><i style="width:${p}%;--c:${c}"></i></div>` : ''}
     </div>`).join('');
 
-  // timeline
   const tl = (dow === 0 || dow === 6) ? WEEKEND : SCHOOL_DAY;
   const hm = pad(now.getHours()) + ':' + pad(now.getMinutes());
   let nowIdx = -1;
@@ -285,7 +405,6 @@ function renderToday() {
     </div>`).join('');
   $('#clock').textContent = hm;
 
-  // 7-day chart
   let ch = '';
   for (let i = 6; i >= 0; i--) {
     const x = new Date(); x.setDate(x.getDate() - i);
@@ -297,49 +416,31 @@ function renderToday() {
   $('#chart').innerHTML = ch;
 }
 
-/* ---------- Render: STUDY ---------- */
-function renderStudy() {
-  const all = SUBJECTS.flatMap(allTopics);
-  const dn = all.filter(k => state.topics[k]).length;
-  const p = all.length ? Math.round(dn / all.length * 100) : 0;
-  $('#overallPill').textContent = `${dn}/${all.length} · ${p}%`;
-  $('#overallBar').style.width = p + '%';
-
-  // weekly plan
+/* ---------- Render: แผนรายสัปดาห์ (เตรียมทหาร) ---------- */
+function renderPlan() {
   const today = new Date().getDay();
   $('#plan').innerHTML = WEEK_ORDER.map(d => {
     const subs = planSubs(d).map(x => {
-      const s = SUBJECTS.find(y => y.id === x.id);
+      const s = subjById(x.id);
       return s ? `<div class="pchip" style="--c:${s.color}"><i></i>${s.name}</div>` : '';
     }).join('');
     const ex = d === 6 ? '<div class="pchip x">+ ข้อสอบเก่า</div>'
              : d === 0 ? '<div class="pchip x">+ ทบทวนทั้งสัปดาห์</div>' : '';
     return `<div class="pday ${d === today ? 'today' : ''}"><b>${DOW[d]}</b>${subs}${ex}</div>`;
   }).join('');
+}
 
-  // subject cards
-  $('#subjects').innerHTML = SUBJECTS.map(s => {
-    const ks = allTopics(s);
-    const d = ks.filter(k => state.topics[k]).length;
-    const sp = Math.round(d / ks.length * 100);
-    let body = '';
-    s.groups.forEach(g => {
-      const items = g.topics.map(t => tkey(s.id, t)).filter(k =>
-        readFilter === 'all' || (readFilter === 'done' ? state.topics[k] : !state.topics[k]));
-      if (!items.length) return;
-      if (g.title) body += `<div class="sec">${g.title}</div>`;
-      body += items.map(k => checkHTML({id:'t:'+k, text:tname(k), topic:k}, !!state.topics[k])).join('');
-    });
-    if (!body) body = `<div class="empty">${readFilter === 'todo' ? 'อ่านครบแล้ว เยี่ยมมาก!' : 'ยังไม่มีหัวข้อที่อ่านแล้ว'}</div>`;
-    return `<div class="subj glass" style="--c:${s.color}">
-      <div class="subj-h">
-        <div class="code">${s.code}</div>
-        <div class="row"><h3>${s.name}</h3><span class="n">${d}/${ks.length}</span></div>
-        <div class="pbar"><i style="width:${sp}%"></i></div>
-      </div>
-      <div class="subj-b">${body}</div>
-    </div>`;
-  }).join('');
+/* ---------- Render: สนามสอบ (cadet / netsat / nco) ---------- */
+function renderTrack(t) {
+  const cfg = TRACKS[t];
+  const list = $(cfg.list);
+  if (!list) return;
+  const all = cfg.subjects.flatMap(allTopics);
+  const dn = all.filter(k => state.topics[k]).length;
+  const p = all.length ? Math.round(dn / all.length * 100) : 0;
+  $(`[data-pill="${t}"]`).forEach(el => el.textContent = `${dn}/${all.length} · ${p}%`);
+  $(`[data-bar="${t}"]`).forEach(el => el.style.width = p + '%');
+  list.innerHTML = cfg.subjects.map(s => subjectCard(s, readFilter[t] || 'all')).join('');
 }
 
 /* ---------- Render: TRAINING ---------- */
@@ -362,8 +463,13 @@ function renderTrain() {
   $('#wBody').innerHTML = html;
 }
 
-function renderAll() { renderToday(); renderStudy(); renderTrain(); }
-function updateCd() { const l = daysLeft(); $('#cdNum').textContent = l === null ? '--' : l; }
+function renderAll() {
+  renderToday();
+  renderPlan();
+  Object.keys(TRACKS).forEach(renderTrack);
+  renderTrain();
+  updateCd();
+}
 
 /* ---------- Actions ---------- */
 function addCustom() {
@@ -399,13 +505,16 @@ function addMoreTopic() {
 $('.tab').forEach(t => t.addEventListener('click', () => {
   $('.tab').forEach(x => x.classList.toggle('active', x === t));
   $('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t.dataset.view));
+  window.scrollTo({top:0, behavior:'smooth'});
 }));
 
 document.addEventListener('change', e => {
-  const cb = e.target;
-  if (cb.type !== 'checkbox') return;
-  if (cb.dataset.topic) state.topics[cb.dataset.topic] = cb.checked;
-  else todayDay().done[cb.dataset.id] = cb.checked;
+  const el = e.target;
+  if (el.dataset.exam)    { setExam(el.dataset.exam, el.value); return; }
+  if (el.dataset.include) { toggleInclude(el.dataset.include, el.checked); return; }
+  if (el.type !== 'checkbox') return;
+  if (el.dataset.topic) state.topics[el.dataset.topic] = el.checked;
+  else todayDay().done[el.dataset.id] = el.checked;
   save(); renderAll();
 });
 
@@ -419,29 +528,26 @@ document.addEventListener('click', e => {
   if (dayBtn) { selDow = +dayBtn.dataset.dow; renderTrain(); return; }
 
   const chip = e.target.closest('.chip');
-  if (chip) {
-    readFilter = chip.dataset.f;
-    $('.chip').forEach(c => c.classList.toggle('active', c === chip));
-    renderStudy();
+  if (chip && chip.dataset.track) {
+    const t = chip.dataset.track;
+    readFilter[t] = chip.dataset.f;
+    $(`.chip[data-track="${t}"]`).forEach(c => c.classList.toggle('active', c === chip));
+    renderTrack(t);
   }
 });
 
 $('#addBtn').addEventListener('click', addCustom);
 $('#customInput').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
 
-$('#examDate').value = state.examDate || '';
-$('#examDate').addEventListener('change', e => {
-  state.examDate = e.target.value;
-  save(); updateCd(); renderToday();
-});
-
 $('#resetBtn').addEventListener('click', () => {
   if (!confirm('ล้างข้อมูลทั้งหมด (ติ๊กอ่านหนังสือ + ประวัติรายวัน)?')) return;
-  state = {examDate:state.examDate, topics:{}, days:{}};
+  state = {examDate:state.examDate, examDates:state.examDates, include:state.include, topics:{}, days:{}};
   save(); renderAll();
 });
 
 /* ---------- Init ---------- */
-updateCd();
+$('[data-exam]').forEach(i => i.value = getExam(i.dataset.exam) || '');
+$('[data-include]').forEach(i => i.checked = !!state.include[i.dataset.include]);
 renderAll();
 setInterval(() => { renderToday(); updateCd(); }, 60000);
+window.__APP_OK = true;
