@@ -1,7 +1,14 @@
 /* =========================================================
    CADET PREP — App Script
+   ครอบทั้งไฟล์ด้วย IIFE → ตัวแปรไม่ชนกับสคริปต์อื่น / ไม่รันซ้ำ
+   ========================================================= */
+(function () {
+'use strict';
+if (window.__CADET_LOADED) return;
+window.__CADET_LOADED = true;
+
+/* =========================================================
    ส่วนที่ 1: ข้อมูล (แก้ไข/เพิ่มวิชาได้ตรงนี้)
-   ส่วนที่ 2: ENGINE (ไม่ต้องแก้)
    ========================================================= */
 
 /* ---------- เตรียมทหาร ---------- */
@@ -165,7 +172,7 @@ const WORKOUT = {
 
 
 /* =========================================================
-   ENGINE
+   ส่วนที่ 2: ENGINE (ไม่ต้องแก้)
    ========================================================= */
 const DOW = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 const DOW_S = ['อา','จ','อ','พ','พฤ','ศ','ส'];
@@ -173,9 +180,14 @@ const WEEK_ORDER = [1,2,3,4,5,6,0];
 const KEY = 'cadetPrep.v1';
 
 const ALL_SUBJECTS = [];
-Object.entries(TRACKS).forEach(([t, cfg]) => cfg.subjects.forEach(s => { s.track = t; ALL_SUBJECTS.push(s); }));
+Object.keys(TRACKS).forEach(t => {
+  TRACKS[t].subjects.forEach(s => { s.track = t; ALL_SUBJECTS.push(s); });
+});
 
-let state = JSON.parse(localStorage.getItem(KEY) || 'null') || {};
+/* ---------- โหลดข้อมูลที่บันทึกไว้ ---------- */
+let state;
+try { state = JSON.parse(localStorage.getItem(KEY) || 'null') || {}; }
+catch (err) { state = {}; }
 state.examDate  = state.examDate  || '';
 state.examDates = state.examDates || {};
 state.include   = state.include   || {};
@@ -186,12 +198,12 @@ const readFilter = {cadet:'all', netsat:'all', nco:'all'};
 let selDow = new Date().getDay();
 
 /* ---------- Helpers ---------- */
+const qs  = sel => document.querySelector(sel);
+const qsa = sel => Array.from(document.querySelectorAll(sel));
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
 const pad = n => String(n).padStart(2, '0');
-const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dkey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const $ = s => document.querySelector(s);
-const $ = s => Array.from(document.querySelectorAll(s));
 const CHK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c110d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
 
 const tkey = (sid, t) => sid + '::' + t;
@@ -199,42 +211,47 @@ const tname = k => k.split('::')[1];
 const subjById = id => ALL_SUBJECTS.find(s => s.id === id);
 const subjOf = k => subjById(k.split('::')[0]);
 const allTopics = s => s.groups.flatMap(g => g.topics.map(t => tkey(s.id, t)));
-const planSubs = dow => STUDY_PLAN[dow]?.subjects || [];
+const planSubs = dow => (STUDY_PLAN[dow] && STUDY_PLAN[dow].subjects) || [];
 const todayDay = () => getDay(dkey(new Date()), new Date().getDay());
 
 /* ---------- วันสอบ ---------- */
-const getExam = t => t === 'cadet' ? state.examDate : (state.examDates[t] || '');
+function getExam(t) { return t === 'cadet' ? state.examDate : (state.examDates[t] || ''); }
 function setExam(t, v) {
   if (t === 'cadet') state.examDate = v; else state.examDates[t] = v;
   save(); updateCd(); renderToday();
 }
-function daysLeft(t = 'cadet') {
-  const v = getExam(t);
+function daysLeft(t) {
+  const v = getExam(t || 'cadet');
   if (!v) return null;
   const now = new Date(); now.setHours(0,0,0,0);
   return Math.max(0, Math.round((new Date(v + 'T00:00:00') - now) / 86400000));
 }
 function updateCd() {
-  $('[data-cd]').forEach(el => { const l = daysLeft(el.dataset.cd); el.textContent = l === null ? '--' : l; });
+  qsa('[data-cd]').forEach(el => {
+    const l = daysLeft(el.dataset.cd);
+    el.textContent = l === null ? '--' : l;
+  });
 }
 
 /* ---------- เลือกหัวข้อ ---------- */
-function pickTopics(dow, exclude = [], perSubject) {
+function pickTopics(dow, exclude, perSubject) {
+  exclude = exclude || [];
   const out = [];
   planSubs(dow).forEach(p => {
     const s = subjById(p.id);
     if (!s) return;
     allTopics(s)
       .filter(k => !state.topics[k] && !exclude.includes(k))
-      .slice(0, perSubject ?? p.n)
+      .slice(0, perSubject != null ? perSubject : p.n)
       .forEach(k => out.push(k));
   });
   return out;
 }
 
 /* หมุนวิชาในสนามนั้นทีละวัน แล้วเลือกเรื่องถัดไปที่ยังไม่อ่าน */
-function pickTrackTopic(t, exclude = []) {
-  const subs = TRACKS[t]?.subjects || [];
+function pickTrackTopic(t, exclude) {
+  exclude = exclude || [];
+  const subs = (TRACKS[t] && TRACKS[t].subjects) || [];
   if (!subs.length) return null;
   const start = Math.floor(Date.now() / 86400000) % subs.length;
   for (let i = 0; i < subs.length; i++) {
@@ -253,22 +270,26 @@ function getDay(key, dow) {
       const k = pickTrackTopic(t, topics);
       if (k) topics.push(k);
     });
-    state.days[key] = {done:{}, topics, custom:[], pct:0};
+    state.days[key] = {done:{}, topics:topics, custom:[], pct:0};
     save();
   }
-  return state.days[key];
+  const day = state.days[key];
+  day.done = day.done || {};
+  day.topics = day.topics || [];
+  day.custom = day.custom || [];
+  return day;
 }
 
 function toggleInclude(t, on) {
   state.include[t] = on;
   const day = todayDay();
   if (on) {
-    if (!day.topics.some(k => subjOf(k)?.track === t)) {
+    if (!day.topics.some(k => (subjOf(k) || {}).track === t)) {
       const k = pickTrackTopic(t, day.topics);
       if (k) day.topics.push(k);
     }
   } else {
-    day.topics = day.topics.filter(k => subjOf(k)?.track !== t || state.topics[k]);
+    day.topics = day.topics.filter(k => (subjOf(k) || {}).track !== t || state.topics[k]);
   }
   save(); renderAll();
 }
@@ -277,51 +298,51 @@ function buildSections(day, dow) {
   const plan = STUDY_PLAN[dow] || {subjects:[], extra:[]};
   const w = WORKOUT[dow];
 
-  const study = day.topics.map(k => {
+  const study = day.topics.filter(k => subjOf(k)).map(k => {
     const s = subjOf(k);
-    return {id:'t:'+k, text:'อ่าน: '+tname(k), tag:s?.code || '', color:s?.color, topic:k};
+    return {id:'t:' + k, text:'อ่าน: ' + tname(k), tag:s.code, color:s.color, topic:k};
   });
-  (plan.extra || []).forEach((t, i) => study.push({id:'x'+i, text:t}));
+  (plan.extra || []).forEach((t, i) => study.push({id:'x' + i, text:t}));
 
   const train = [];
   if (w.run) train.push({id:'run', text:w.run.t, sub:w.run.d, tag:'รร', color:'#ff8a3d'});
-  w.school.forEach(id => train.push({id:'s-'+id, text:EX[id].name+' — '+EX[id].th, sub:EX[id].sets, tag:'ราว รร', color:'#ff8a3d'}));
-  w.home.forEach(id => train.push({id:'h-'+id, text:EX[id].name+' — '+EX[id].th, sub:EX[id].sets, tag:'บ้าน'}));
+  w.school.forEach(id => train.push({id:'s-' + id, text:EX[id].name + ' — ' + EX[id].th, sub:EX[id].sets, tag:'ราว รร', color:'#ff8a3d'}));
+  w.home.forEach(id => train.push({id:'h-' + id, text:EX[id].name + ' — ' + EX[id].th, sub:EX[id].sets, tag:'บ้าน'}));
 
   const sections = [
-    {key:'study',   title:'อ่านหนังสือ · Study',     items:study},
-    {key:'train',   title:'ออกกำลังกาย · '+w.title, items:train},
-    {key:'routine', title:'กิจวัตร · Routine',        items:ROUTINE.map(r => ({id:'r-'+r.id, text:r.text}))},
+    {key:'study',   title:'อ่านหนังสือ · Study',      items:study},
+    {key:'train',   title:'ออกกำลังกาย · ' + w.title, items:train},
+    {key:'routine', title:'กิจวัตร · Routine',         items:ROUTINE.map(r => ({id:'r-' + r.id, text:r.text}))},
   ];
   if (day.custom.length) {
     sections.push({key:'custom', title:'งานเพิ่มเติม',
-      items:day.custom.map((t, i) => ({id:'c-'+i, text:t, custom:true, ci:i}))});
+      items:day.custom.map((t, i) => ({id:'c-' + i, text:t, custom:true, ci:i}))});
   }
   return sections;
 }
 
-const isDone = (it, day) => it.topic ? !!state.topics[it.topic] : !!day.done[it.id];
+function isDone(it, day) { return it.topic ? !!state.topics[it.topic] : !!day.done[it.id]; }
 
 /* ---------- Templates ---------- */
 function checkHTML(it, done) {
-  const tagStyle = it.color ? `style="color:${it.color};border-color:${it.color}66"` : '';
-  return `<label class="check">
-    <input type="checkbox" data-id="${esc(it.id)}" ${it.topic ? `data-topic="${esc(it.topic)}"` : ''} ${done ? 'checked' : ''}>
-    <span class="box">${CHK}</span>
-    <span class="txt">${esc(it.text)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span>
-    ${it.tag ? `<span class="tag" ${tagStyle}>${esc(it.tag)}</span>` : ''}
-    ${it.custom ? `<button class="del" data-del="${it.ci}" title="ลบ">×</button>` : ''}
-  </label>`;
+  const tagStyle = it.color ? 'style="color:' + it.color + ';border-color:' + it.color + '66"' : '';
+  return '<label class="check">' +
+    '<input type="checkbox" data-id="' + esc(it.id) + '"' + (it.topic ? ' data-topic="' + esc(it.topic) + '"' : '') + (done ? ' checked' : '') + '>' +
+    '<span class="box">' + CHK + '</span>' +
+    '<span class="txt">' + esc(it.text) + (it.sub ? '<small>' + esc(it.sub) + '</small>' : '') + '</span>' +
+    (it.tag ? '<span class="tag" ' + tagStyle + '>' + esc(it.tag) + '</span>' : '') +
+    (it.custom ? '<button class="del" data-del="' + it.ci + '" title="ลบ">×</button>' : '') +
+  '</label>';
 }
 
 function exCard(id) {
   const e = EX[id];
-  return `<div class="ex">
-    <div class="t"><div><h4>${e.name}</h4><div class="th">${e.th}</div></div><span class="sets">${e.sets}</span></div>
-    <p>${e.how}</p>
-    <div class="why">✓ ${e.why}</div>
-    ${e.warn ? `<div class="warn">⚠ ${e.warn}</div>` : ''}
-  </div>`;
+  return '<div class="ex">' +
+    '<div class="t"><div><h4>' + e.name + '</h4><div class="th">' + e.th + '</div></div><span class="sets">' + e.sets + '</span></div>' +
+    '<p>' + e.how + '</p>' +
+    '<div class="why">✓ ' + e.why + '</div>' +
+    (e.warn ? '<div class="warn">⚠ ' + e.warn + '</div>' : '') +
+  '</div>';
 }
 
 function subjectCard(s, f) {
@@ -333,20 +354,22 @@ function subjectCard(s, f) {
     const items = g.topics.map(t => tkey(s.id, t)).filter(k =>
       f === 'all' || (f === 'done' ? state.topics[k] : !state.topics[k]));
     if (!items.length) return;
-    if (g.title) body += `<div class="sec">${esc(g.title)}</div>`;
-    body += items.map(k => checkHTML({id:'t:'+k, text:tname(k), topic:k}, !!state.topics[k])).join('');
+    if (g.title) body += '<div class="sec">' + esc(g.title) + '</div>';
+    body += items.map(k => checkHTML({id:'t:' + k, text:tname(k), topic:k}, !!state.topics[k])).join('');
   });
-  if (!body) body = `<div class="empty">${f === 'todo' ? 'อ่านครบแล้ว เยี่ยมมาก!' : 'ยังไม่มีหัวข้อที่อ่านแล้ว'}</div>`;
-  const comp = s.competency ? `<div class="comp"><div class="comp-h">Competency · ทักษะที่ใช้ในข้อสอบ</div>
-      <div class="comp-list">${s.competency.map(c => `<span>${esc(c)}</span>`).join('')}</div></div>` : '';
-  return `<div class="subj glass" style="--c:${s.color}">
-    <div class="subj-h">
-      <div class="code">${esc(s.code)}</div>
-      <div class="row"><h3>${esc(s.name)}</h3><span class="n">${d}/${ks.length}</span></div>
-      <div class="pbar"><i style="width:${sp}%"></i></div>
-    </div>
-    <div class="subj-b">${body}${comp}</div>
-  </div>`;
+  if (!body) body = '<div class="empty">' + (f === 'todo' ? 'อ่านครบแล้ว เยี่ยมมาก!' : 'ยังไม่มีหัวข้อที่อ่านแล้ว') + '</div>';
+  const comp = s.competency
+    ? '<div class="comp"><div class="comp-h">Competency · ทักษะที่ใช้ในข้อสอบ</div><div class="comp-list">' +
+      s.competency.map(c => '<span>' + esc(c) + '</span>').join('') + '</div></div>'
+    : '';
+  return '<div class="subj glass" style="--c:' + s.color + '">' +
+    '<div class="subj-h">' +
+      '<div class="code">' + esc(s.code) + '</div>' +
+      '<div class="row"><h3>' + esc(s.name) + '</h3><span class="n">' + d + '/' + ks.length + '</span></div>' +
+      '<div class="pbar"><i style="width:' + sp + '%"></i></div>' +
+    '</div>' +
+    '<div class="subj-b">' + body + comp + '</div>' +
+  '</div>';
 }
 
 /* ---------- Render: TODAY ---------- */
@@ -359,108 +382,112 @@ function renderToday() {
   sections.forEach(sec => {
     const d = sec.items.filter(i => isDone(i, day)).length;
     total += sec.items.length; done += d;
-    html += `<div class="sec">${sec.title} <b>${d}/${sec.items.length}</b></div>`;
+    html += '<div class="sec">' + sec.title + ' <b>' + d + '/' + sec.items.length + '</b></div>';
     if (sec.key === 'study' && !day.topics.length && planSubs(dow).length)
-      html += `<div class="empty">อ่านครบทุกหัวข้อของวิชาวันนี้แล้ว — ทำข้อสอบเก่าแทน</div>`;
+      html += '<div class="empty">อ่านครบทุกหัวข้อของวิชาวันนี้แล้ว — ทำข้อสอบเก่าแทน</div>';
     html += sec.items.map(i => checkHTML(i, isDone(i, day))).join('');
     if (sec.key === 'study' && planSubs(dow).length)
-      html += `<div class="more-row"><button class="btn ghost mini" id="moreBtn">+ อ่านเพิ่มอีกเรื่อง</button></div>`;
+      html += '<div class="more-row"><button class="btn ghost mini" id="moreBtn">+ อ่านเพิ่มอีกเรื่อง</button></div>';
   });
-  $('#todayList').innerHTML = html;
+  qs('#todayList').innerHTML = html;
 
   const pct = total ? Math.round(done / total * 100) : 0;
   day.pct = pct; save();
 
-  $('#dayTitle').textContent = 'วัน' + DOW[dow];
-  $('#dayPill').textContent = `${done}/${total} · ${pct}%`;
-  $('#todayText').textContent = `วัน${DOW[dow]}ที่ ${now.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}`;
+  qs('#dayTitle').textContent = 'วัน' + DOW[dow];
+  qs('#dayPill').textContent = done + '/' + total + ' · ' + pct + '%';
+  qs('#todayText').textContent = 'วัน' + DOW[dow] + 'ที่ ' + now.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
 
   const all = SUBJECTS.flatMap(allTopics);
   const readDone = all.filter(k => state.topics[k]).length;
   const readPct = all.length ? Math.round(readDone / all.length * 100) : 0;
 
   let streak = 0;
-  const d = new Date();
-  if (pct < 80) d.setDate(d.getDate() - 1);
-  while (state.days[dkey(d)]?.pct >= 80) { streak++; d.setDate(d.getDate() - 1); }
+  const sd = new Date();
+  if (pct < 80) sd.setDate(sd.getDate() - 1);
+  while (state.days[dkey(sd)] && state.days[dkey(sd)].pct >= 80) { streak++; sd.setDate(sd.getDate() - 1); }
 
   const left = daysLeft('cadet');
-  $('#stats').innerHTML = [
-    ['Today · วันนี้',          pct + '%',      `${done} จาก ${total} งาน`,        pct, 'var(--accent)'],
-    ['Cadet · อ่านแล้ว',        readPct + '%',  `${readDone}/${all.length} หัวข้อ`, readPct, 'var(--ok)'],
-    ['Streak · ต่อเนื่อง',      streak + ' วัน', 'วันที่ทำครบ ≥80%',               Math.min(streak * 10, 100), 'var(--orange)'],
+  const cards = [
+    ['Today · วันนี้',     pct + '%',       done + ' จาก ' + total + ' งาน',         pct, 'var(--accent)'],
+    ['Cadet · อ่านแล้ว',   readPct + '%',   readDone + '/' + all.length + ' หัวข้อ', readPct, 'var(--ok)'],
+    ['Streak · ต่อเนื่อง', streak + ' วัน', 'วันที่ทำครบ ≥80%',                     Math.min(streak * 10, 100), 'var(--orange)'],
     ['Exam · วันสอบ', left === null ? '--' : left + ' วัน', left === null ? 'ตั้งวันสอบด้านบน' : 'เหลือก่อนสอบเตรียมทหาร', null, ''],
-  ].map(([k, v, s, p, c]) => `<div class="stat glass">
-      <div class="lbl">${k}</div><div class="v">${v}</div><div class="s">${s}</div>
-      ${p !== null ? `<div class="pbar"><i style="width:${p}%;--c:${c}"></i></div>` : ''}
-    </div>`).join('');
+  ];
+  qs('#stats').innerHTML = cards.map(c =>
+    '<div class="stat glass"><div class="lbl">' + c[0] + '</div><div class="v">' + c[1] + '</div><div class="s">' + c[2] + '</div>' +
+    (c[3] !== null ? '<div class="pbar"><i style="width:' + c[3] + '%;--c:' + c[4] + '"></i></div>' : '') +
+    '</div>').join('');
 
   const tl = (dow === 0 || dow === 6) ? WEEKEND : SCHOOL_DAY;
   const hm = pad(now.getHours()) + ':' + pad(now.getMinutes());
   let nowIdx = -1;
   tl.forEach((b, i) => { if (b[0] <= hm) nowIdx = i; });
-  $('#timeline').innerHTML = tl.map((b, i) => `<div class="tl-i ${i === nowIdx ? 'now' : ''}">
-      <div class="tl-time">${b[0]}${i === nowIdx ? '<span class="now-badge">NOW</span>' : ''}</div>
-      <div class="tl-t">${b[1]}</div>
-    </div>`).join('');
-  $('#clock').textContent = hm;
+  qs('#timeline').innerHTML = tl.map((b, i) =>
+    '<div class="tl-i' + (i === nowIdx ? ' now' : '') + '">' +
+      '<div class="tl-time">' + b[0] + (i === nowIdx ? '<span class="now-badge">NOW</span>' : '') + '</div>' +
+      '<div class="tl-t">' + b[1] + '</div>' +
+    '</div>').join('');
+  qs('#clock').textContent = hm;
 
   let ch = '';
   for (let i = 6; i >= 0; i--) {
     const x = new Date(); x.setDate(x.getDate() - i);
-    const p = state.days[dkey(x)]?.pct || 0;
-    ch += `<div class="col">
-      <div class="b ${p >= 80 ? 'hi' : ''} ${i === 0 ? 'today' : ''}" style="height:${Math.max(p, 3)}%" title="${p}%"></div>
-      <span>${DOW_S[x.getDay()]}</span></div>`;
+    const p = (state.days[dkey(x)] && state.days[dkey(x)].pct) || 0;
+    ch += '<div class="col"><div class="b' + (p >= 80 ? ' hi' : '') + (i === 0 ? ' today' : '') +
+          '" style="height:' + Math.max(p, 3) + '%" title="' + p + '%"></div><span>' + DOW_S[x.getDay()] + '</span></div>';
   }
-  $('#chart').innerHTML = ch;
+  qs('#chart').innerHTML = ch;
 }
 
 /* ---------- Render: แผนรายสัปดาห์ (เตรียมทหาร) ---------- */
 function renderPlan() {
+  const el = qs('#plan');
+  if (!el) return;
   const today = new Date().getDay();
-  $('#plan').innerHTML = WEEK_ORDER.map(d => {
+  el.innerHTML = WEEK_ORDER.map(d => {
     const subs = planSubs(d).map(x => {
       const s = subjById(x.id);
-      return s ? `<div class="pchip" style="--c:${s.color}"><i></i>${s.name}</div>` : '';
+      return s ? '<div class="pchip" style="--c:' + s.color + '"><i></i>' + s.name + '</div>' : '';
     }).join('');
     const ex = d === 6 ? '<div class="pchip x">+ ข้อสอบเก่า</div>'
              : d === 0 ? '<div class="pchip x">+ ทบทวนทั้งสัปดาห์</div>' : '';
-    return `<div class="pday ${d === today ? 'today' : ''}"><b>${DOW[d]}</b>${subs}${ex}</div>`;
+    return '<div class="pday' + (d === today ? ' today' : '') + '"><b>' + DOW[d] + '</b>' + subs + ex + '</div>';
   }).join('');
 }
 
 /* ---------- Render: สนามสอบ (cadet / netsat / nco) ---------- */
 function renderTrack(t) {
   const cfg = TRACKS[t];
-  const list = $(cfg.list);
+  const list = qs(cfg.list);
   if (!list) return;
   const all = cfg.subjects.flatMap(allTopics);
   const dn = all.filter(k => state.topics[k]).length;
   const p = all.length ? Math.round(dn / all.length * 100) : 0;
-  $(`[data-pill="${t}"]`).forEach(el => el.textContent = `${dn}/${all.length} · ${p}%`);
-  $(`[data-bar="${t}"]`).forEach(el => el.style.width = p + '%');
+  qsa('[data-pill="' + t + '"]').forEach(el => { el.textContent = dn + '/' + all.length + ' · ' + p + '%'; });
+  qsa('[data-bar="' + t + '"]').forEach(el => { el.style.width = p + '%'; });
   list.innerHTML = cfg.subjects.map(s => subjectCard(s, readFilter[t] || 'all')).join('');
 }
 
 /* ---------- Render: TRAINING ---------- */
 function renderTrain() {
   const today = new Date().getDay();
-  $('#week').innerHTML = WEEK_ORDER.map(d => `<button class="day glass ${d === today ? 'today' : ''} ${d === selDow ? 'sel' : ''}" data-dow="${d}">
-      <b>${DOW_S[d]}</b><span>${WORKOUT[d].title}</span></button>`).join('');
+  qs('#week').innerHTML = WEEK_ORDER.map(d =>
+    '<button class="day glass' + (d === today ? ' today' : '') + (d === selDow ? ' sel' : '') + '" data-dow="' + d + '">' +
+    '<b>' + DOW_S[d] + '</b><span>' + WORKOUT[d].title + '</span></button>').join('');
 
   const w = WORKOUT[selDow];
-  $('#wTitle').innerHTML = `${w.title}<small>วัน${DOW[selDow]}</small>`;
-  $('#wSub').textContent = w.sub;
+  qs('#wTitle').innerHTML = w.title + '<small>วัน' + DOW[selDow] + '</small>';
+  qs('#wSub').textContent = w.sub;
 
   let html = '';
-  if (w.run) html += `<div class="runbox">
-      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1405" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="M6 20l3-6 3 2 1-5 4 4M9 14l-2-3 4-3 3 3"/></svg></div>
-      <div><h4>${w.run.t}</h4><p>${w.run.d}</p></div>
-    </div>`;
-  if (w.school.length) html += `<div class="sec">ที่ราวโรงเรียน (หลังวิ่ง)</div><div class="ex-grid">${w.school.map(exCard).join('')}</div>`;
-  html += `<div class="sec">ที่บ้าน · ดัมเบล / น้ำหนักตัว</div><div class="ex-grid">${w.home.map(exCard).join('')}</div>`;
-  $('#wBody').innerHTML = html;
+  if (w.run) html += '<div class="runbox">' +
+      '<div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a1405" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4" r="2"/><path d="M6 20l3-6 3 2 1-5 4 4M9 14l-2-3 4-3 3 3"/></svg></div>' +
+      '<div><h4>' + w.run.t + '</h4><p>' + w.run.d + '</p></div>' +
+    '</div>';
+  if (w.school.length) html += '<div class="sec">ที่ราวโรงเรียน (หลังวิ่ง)</div><div class="ex-grid">' + w.school.map(exCard).join('') + '</div>';
+  html += '<div class="sec">ที่บ้าน · ดัมเบล / น้ำหนักตัว</div><div class="ex-grid">' + w.home.map(exCard).join('') + '</div>';
+  qs('#wBody').innerHTML = html;
 }
 
 function renderAll() {
@@ -473,10 +500,11 @@ function renderAll() {
 
 /* ---------- Actions ---------- */
 function addCustom() {
-  const v = $('#customInput').value.trim();
+  const input = qs('#customInput');
+  const v = input.value.trim();
   if (!v) return;
   todayDay().custom.push(v);
-  $('#customInput').value = '';
+  input.value = '';
   save(); renderToday();
 }
 
@@ -484,8 +512,9 @@ function deleteCustom(i) {
   const day = todayDay();
   day.custom.splice(i, 1);
   const nd = {};
-  Object.entries(day.done).forEach(([k, v]) => {
-    if (!k.startsWith('c-')) { nd[k] = v; return; }
+  Object.keys(day.done).forEach(k => {
+    const v = day.done[k];
+    if (k.indexOf('c-') !== 0) { nd[k] = v; return; }
     const n = +k.slice(2);
     if (n < i) nd[k] = v;
     else if (n > i) nd['c-' + (n - 1)] = v;
@@ -497,14 +526,14 @@ function deleteCustom(i) {
 function addMoreTopic() {
   const dow = new Date().getDay();
   const day = todayDay();
-  day.topics.push(...pickTopics(dow, day.topics, 1).slice(0, 1));
+  pickTopics(dow, day.topics, 1).slice(0, 1).forEach(k => day.topics.push(k));
   save(); renderToday();
 }
 
 /* ---------- Events ---------- */
-$('.tab').forEach(t => t.addEventListener('click', () => {
-  $('.tab').forEach(x => x.classList.toggle('active', x === t));
-  $('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t.dataset.view));
+qsa('.tab').forEach(t => t.addEventListener('click', () => {
+  qsa('.tab').forEach(x => x.classList.toggle('active', x === t));
+  qsa('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t.dataset.view));
   window.scrollTo({top:0, behavior:'smooth'});
 }));
 
@@ -514,7 +543,7 @@ document.addEventListener('change', e => {
   if (el.dataset.include) { toggleInclude(el.dataset.include, el.checked); return; }
   if (el.type !== 'checkbox') return;
   if (el.dataset.topic) state.topics[el.dataset.topic] = el.checked;
-  else todayDay().done[el.dataset.id] = el.checked;
+  else if (el.dataset.id) todayDay().done[el.dataset.id] = el.checked;
   save(); renderAll();
 });
 
@@ -531,23 +560,25 @@ document.addEventListener('click', e => {
   if (chip && chip.dataset.track) {
     const t = chip.dataset.track;
     readFilter[t] = chip.dataset.f;
-    $(`.chip[data-track="${t}"]`).forEach(c => c.classList.toggle('active', c === chip));
+    qsa('.chip[data-track="' + t + '"]').forEach(c => c.classList.toggle('active', c === chip));
     renderTrack(t);
   }
 });
 
-$('#addBtn').addEventListener('click', addCustom);
-$('#customInput').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
+qs('#addBtn').addEventListener('click', addCustom);
+qs('#customInput').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
 
-$('#resetBtn').addEventListener('click', () => {
+qs('#resetBtn').addEventListener('click', () => {
   if (!confirm('ล้างข้อมูลทั้งหมด (ติ๊กอ่านหนังสือ + ประวัติรายวัน)?')) return;
   state = {examDate:state.examDate, examDates:state.examDates, include:state.include, topics:{}, days:{}};
   save(); renderAll();
 });
 
 /* ---------- Init ---------- */
-$('[data-exam]').forEach(i => i.value = getExam(i.dataset.exam) || '');
-$('[data-include]').forEach(i => i.checked = !!state.include[i.dataset.include]);
+qsa('[data-exam]').forEach(i => { i.value = getExam(i.dataset.exam) || ''; });
+qsa('[data-include]').forEach(i => { i.checked = !!state.include[i.dataset.include]; });
 renderAll();
 setInterval(() => { renderToday(); updateCd(); }, 60000);
 window.__APP_OK = true;
+
+})();
