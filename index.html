@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CADET PREP — ตารางเตรียมสอบเตรียมทหาร</title>
+<title>CADET PREP — ตารางเตรียมสอบ</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,26 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="css/style.css">
-<script src="js/app.js" defer></script>
+
+<!-- แจ้ง error บนหน้าเว็บ -->
+<script>
+  function showErr(msg){
+    const put = () => {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c62828;color:#fff;padding:12px 18px;font:14px/1.5 sans-serif';
+      b.textContent = '⚠ ' + msg;
+      document.body.prepend(b);
+    };
+    document.body ? put() : document.addEventListener('DOMContentLoaded', put);
+  }
+  window.addEventListener('error', e => {
+    if (e.message) showErr('JS Error: ' + e.message + ' (บรรทัด ' + e.lineno + ' ใน ' + (e.filename || '').split('/').pop() + ')');
+  });
+  window.addEventListener('load', () => {
+    if (!window.__APP_OK) showErr('app.js ไม่ทำงาน — เช็กว่ามีไฟล์ js/app.js และโค้ดครบทั้งไฟล์');
+  });
+</script>
+<script src="js/app.js" defer onerror="showErr('หาไฟล์ js/app.js ไม่เจอ — เช็กชื่อโฟลเดอร์และชื่อไฟล์')"></script>
 </head>
 <body>
 <div class="wrap">
@@ -23,25 +42,27 @@
         <svg width="32" height="32" viewBox="0 0 24 24" fill="#1a1405"><path d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.5L12 16.8 6.1 20l1.3-6.5L2.5 8.9l6.6-.8z"/></svg>
       </div>
       <div>
-        <h1>AFAPS <span>70</span></h1>
+        <h1>Cadet <span>Prep</span></h1>
         <p id="todayText">ตารางเตรียมสอบเตรียมทหาร</p>
       </div>
     </div>
     <div class="countdown glass">
       <div>
         <div class="lbl">Days to exam · เหลืออีก</div>
-        <div class="cd-num" id="cdNum">--</div>
+        <div class="cd-num" data-cd="cadet">--</div>
       </div>
       <div>
-        <div class="lbl">วันสอบ</div>
-        <input type="date" id="examDate">
+        <div class="lbl">วันสอบเตรียมทหาร</div>
+        <input type="date" class="date-in" data-exam="cadet">
       </div>
     </div>
   </header>
 
   <nav class="tabs glass">
     <button class="tab active" data-view="today">Today<small>วันนี้</small></button>
-    <button class="tab" data-view="study">Study<small>อ่านหนังสือ</small></button>
+    <button class="tab" data-view="study">Cadet<small>เตรียมทหาร</small></button>
+    <button class="tab tab-kku" data-view="netsat">NETSAT<small>มข.</small></button>
+    <button class="tab tab-air" data-view="nco">NCO<small>จ่าอากาศ</small></button>
     <button class="tab" data-view="train">Training<small>ออกกำลังกาย</small></button>
   </nav>
 
@@ -73,25 +94,81 @@
     </div>
   </section>
 
-  <!-- ================= STUDY ================= -->
+  <!-- ================= CADET STUDY ================= -->
   <section class="view" id="view-study">
     <div class="card glass">
-      <div class="card-h"><h2>Overall Progress<small>ความคืบหน้ารวม 9 วิชา</small></h2><span class="pill" id="overallPill">0%</span></div>
-      <div class="pbar" style="height:10px"><i id="overallBar" style="width:0"></i></div>
+      <div class="card-h"><h2>Overall Progress<small>เตรียมทหาร 9 วิชา</small></h2><span class="pill" data-pill="cadet">0%</span></div>
+      <div class="pbar big"><i data-bar="cadet"></i></div>
     </div>
     <div class="card glass">
       <div class="card-h"><h2>Weekly Plan<small>วิชาประจำวัน</small></h2><span class="pill">หลัก 2 เรื่อง · รอง 1 เรื่อง</span></div>
       <div class="plan" id="plan"></div>
     </div>
     <div class="toolbar">
-      <div class="chips" id="filters">
-        <button class="chip active" data-f="all">ทั้งหมด</button>
-        <button class="chip" data-f="todo">ยังไม่อ่าน</button>
-        <button class="chip" data-f="done">อ่านแล้ว</button>
+      <div class="chips">
+        <button class="chip active" data-track="cadet" data-f="all">ทั้งหมด</button>
+        <button class="chip" data-track="cadet" data-f="todo">ยังไม่อ่าน</button>
+        <button class="chip" data-track="cadet" data-f="done">อ่านแล้ว</button>
       </div>
       <span class="pill">ติ๊กที่นี่หรือในหน้า “วันนี้” ก็ได้ ข้อมูลเชื่อมกัน</span>
     </div>
     <div class="subjects" id="subjects"></div>
+  </section>
+
+  <!-- ================= NETSAT (มข.) ================= -->
+  <section class="view theme-kku" id="view-netsat">
+    <div class="hero">
+      <div class="hero-l">
+        <div class="hero-kicker">เจาะลึก! รายวิชา</div>
+        <h2>NETSAT<span>KHON KAEN UNIVERSITY</span></h2>
+        <p>คณิตศาสตร์ · ฟิสิกส์ · เคมี · วิทยาศาสตร์และเทคโนโลยี</p>
+        <label class="switch"><input type="checkbox" data-include="netsat"><span class="knob"></span>ใส่ NETSAT วันละ 1 เรื่องในเช็กลิสต์วันนี้</label>
+      </div>
+      <div class="hero-r">
+        <div><div class="lbl">เหลืออีก (วัน)</div><div class="cd-num" data-cd="netsat">--</div></div>
+        <div><div class="lbl">วันสอบ NETSAT</div><input type="date" class="date-in" data-exam="netsat"></div>
+      </div>
+    </div>
+    <div class="card glass">
+      <div class="card-h"><h2>NETSAT Progress<small>ความคืบหน้ารวม 4 วิชา</small></h2><span class="pill" data-pill="netsat">0%</span></div>
+      <div class="pbar big"><i data-bar="netsat"></i></div>
+    </div>
+    <div class="toolbar">
+      <div class="chips">
+        <button class="chip active" data-track="netsat" data-f="all">ทั้งหมด</button>
+        <button class="chip" data-track="netsat" data-f="todo">ยังไม่อ่าน</button>
+        <button class="chip" data-track="netsat" data-f="done">อ่านแล้ว</button>
+      </div>
+    </div>
+    <div class="subjects" id="subjects-netsat"></div>
+  </section>
+
+  <!-- ================= จ่าอากาศ ================= -->
+  <section class="view theme-air" id="view-nco">
+    <div class="hero">
+      <div class="hero-l">
+        <div class="hero-kicker">Royal Thai Air Force · NCO School</div>
+        <h2>จ่าอากาศ<span>AIR FORCE NCO EXAM</span></h2>
+        <p>คณิตศาสตร์ 9 เรื่อง</p>
+        <label class="switch"><input type="checkbox" data-include="nco"><span class="knob"></span>ใส่จ่าอากาศ วันละ 1 เรื่องในเช็กลิสต์วันนี้</label>
+      </div>
+      <div class="hero-r">
+        <div><div class="lbl">เหลืออีก (วัน)</div><div class="cd-num" data-cd="nco">--</div></div>
+        <div><div class="lbl">วันสอบจ่าอากาศ</div><input type="date" class="date-in" data-exam="nco"></div>
+      </div>
+    </div>
+    <div class="card glass">
+      <div class="card-h"><h2>NCO Progress<small>ความคืบหน้ารวม</small></h2><span class="pill" data-pill="nco">0%</span></div>
+      <div class="pbar big"><i data-bar="nco"></i></div>
+    </div>
+    <div class="toolbar">
+      <div class="chips">
+        <button class="chip active" data-track="nco" data-f="all">ทั้งหมด</button>
+        <button class="chip" data-track="nco" data-f="todo">ยังไม่อ่าน</button>
+        <button class="chip" data-track="nco" data-f="done">อ่านแล้ว</button>
+      </div>
+    </div>
+    <div class="subjects" id="subjects-nco"></div>
   </section>
 
   <!-- ================= TRAINING ================= -->
@@ -135,7 +212,7 @@
   </section>
 
   <footer>
-    <span>AFAPS 70 · บันทึกอัตโนมัติในเบราว์เซอร์นี้</span>
+    <span>CADET PREP · บันทึกอัตโนมัติในเบราว์เซอร์นี้</span>
     <button class="btn ghost mini" id="resetBtn">ล้างข้อมูลทั้งหมด</button>
   </footer>
 </div>
