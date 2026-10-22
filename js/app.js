@@ -1,4 +1,10 @@
+/* =========================================================
+   CADET PREP — App Script
+   ส่วนที่ 1: ข้อมูล (แก้ไข/เพิ่มวิชาได้ตรงนี้)
+   ส่วนที่ 2: ENGINE (ไม่ต้องแก้)
+   ========================================================= */
 
+/* ---------- วิชา + หัวข้อ (เพิ่มวิชาใหม่: คัดลอก { ... } แล้ววางต่อท้าย) ---------- */
 const SUBJECTS = [
   { id:'math1', name:'คณิตศาสตร์ ม.ต้น', code:'MATH · M.1–3', color:'#f5c84c', groups:[
     { title:'จำนวนและพีชคณิต', topics:[
@@ -130,7 +136,7 @@ const pad = n => String(n).padStart(2, '0');
 const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+const $ = s => document.querySelectorAll(s);
 const CHK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0c110d" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
 
 const tkey = (sid, t) => sid + '::' + t;
@@ -226,6 +232,7 @@ function renderToday() {
   const day = getDay(key, dow);
   const sections = buildSections(day, dow);
 
+  // checklist
   let total = 0, done = 0, html = '';
   sections.forEach(sec => {
     const d = sec.items.filter(i => isDone(i, day)).length;
@@ -246,6 +253,7 @@ function renderToday() {
   $('#dayPill').textContent = `${done}/${total} · ${pct}%`;
   $('#todayText').textContent = `วัน${DOW[dow]}ที่ ${now.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'})}`;
 
+  // stats
   const all = SUBJECTS.flatMap(allTopics);
   const readDone = all.filter(k => state.topics[k]).length;
   const readPct = all.length ? Math.round(readDone / all.length * 100) : 0;
@@ -266,6 +274,7 @@ function renderToday() {
       ${p !== null ? `<div class="pbar"><i style="width:${p}%;--c:${c}"></i></div>` : ''}
     </div>`).join('');
 
+  // timeline
   const tl = (dow === 0 || dow === 6) ? WEEKEND : SCHOOL_DAY;
   const hm = pad(now.getHours()) + ':' + pad(now.getMinutes());
   let nowIdx = -1;
@@ -276,6 +285,7 @@ function renderToday() {
     </div>`).join('');
   $('#clock').textContent = hm;
 
+  // 7-day chart
   let ch = '';
   for (let i = 6; i >= 0; i--) {
     const x = new Date(); x.setDate(x.getDate() - i);
@@ -295,6 +305,7 @@ function renderStudy() {
   $('#overallPill').textContent = `${dn}/${all.length} · ${p}%`;
   $('#overallBar').style.width = p + '%';
 
+  // weekly plan
   const today = new Date().getDay();
   $('#plan').innerHTML = WEEK_ORDER.map(d => {
     const subs = planSubs(d).map(x => {
@@ -306,6 +317,7 @@ function renderStudy() {
     return `<div class="pday ${d === today ? 'today' : ''}"><b>${DOW[d]}</b>${subs}${ex}</div>`;
   }).join('');
 
+  // subject cards
   $('#subjects').innerHTML = SUBJECTS.map(s => {
     const ks = allTopics(s);
     const d = ks.filter(k => state.topics[k]).length;
@@ -384,9 +396,9 @@ function addMoreTopic() {
 }
 
 /* ---------- Events ---------- */
-$$('.tab').forEach(t => t.addEventListener('click', () => {
-  $$('.tab').forEach(x => x.classList.toggle('active', x === t));
-  $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t.dataset.view));
+$('.tab').forEach(t => t.addEventListener('click', () => {
+  $('.tab').forEach(x => x.classList.toggle('active', x === t));
+  $('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + t.dataset.view));
 }));
 
 document.addEventListener('change', e => {
@@ -409,7 +421,7 @@ document.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if (chip) {
     readFilter = chip.dataset.f;
-    $$('.chip').forEach(c => c.classList.toggle('active', c === chip));
+    $('.chip').forEach(c => c.classList.toggle('active', c === chip));
     renderStudy();
   }
 });
@@ -433,4 +445,3 @@ $('#resetBtn').addEventListener('click', () => {
 updateCd();
 renderAll();
 setInterval(() => { renderToday(); updateCd(); }, 60000);
-window.__APP_OK = true;
